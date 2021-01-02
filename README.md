@@ -14,7 +14,7 @@ In this repository, we will outline the use of automatic differentiation (AD) in
 ## What's additional
 A material model typically receives some type of strain and return a stress, in addition to the corresponding stress-strain tangent (and possibly further tangents). For a classical Neo-Hooke material these relations are rather straightforward and might be summarised in two lines
 
-@todo Cauchy stress equation and Lagrangian tangent with nomenclature
+<img src="https://github.com/jfriedlein/Automatic_differentiation_for_material_modelling-dealii/blob/main/images/Neo-Hooke%20-%20stress%20and%20tangent.png" width="500">
 
 (if that is already what you're looking for, jump ahead to example 1 in the implementation section).
 
@@ -22,11 +22,11 @@ A material model typically receives some type of strain and return a stress, in 
 
 However, for instance, in case of plasticity that gets a bit more involved, because the relations are iterative themself (by "iterative" I mean require iterations). This means that for (small strain) linear plasticity we can write the stress as
 
-@todo add stress equation T = kappa * ... with nomenclature
+<img src="https://github.com/jfriedlein/Automatic_differentiation_for_material_modelling-dealii/blob/main/images/Plasticity%20-%20stress%20equation.png" width="500">
 
 assuming that plasticity evolves and the current step is truely plastic. That still look feasible, but when you look closely you see that even though we now the newest strains eps_(n+1) from the global Newton-Raphson solution scheme,  we don't know what the new plastic strains eps_p_(n+1) are. But there must be an equation for this, right?, as there always is. Of course, here it is
 
-@todo add discretised evolution equation for eps_p
+<img src="https://github.com/jfriedlein/Automatic_differentiation_for_material_modelling-dealii/blob/main/images/Plasticity%20-%20plastic%20strain%20evolution.png" width="500">
 
 which is simply said (when we throw all reasonable continuum mechanics conventions over board) the evolution equation for plasticity. Now we only replaced the unknown by a Lagrange multiplier herein named \gamma. To determine this unknown we use the yield function that adds another constraint (the yield condition) to our problem, namely
 
