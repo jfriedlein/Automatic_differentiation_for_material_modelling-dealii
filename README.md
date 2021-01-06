@@ -2,7 +2,7 @@
 Functions and guide to use automatic differentiation for material modelling in deal.II on the element and QP level
 
 ## In a nutshell
-In this repository, we will outline the use of automatic differentiation (AD) in deal.II for the use in material modelling. Firstly, the already in deal.II avaiable functionality is outlined and then combined with additional features such as the use of automatic differentiation also inside highly nonlinear material models that require local (nested) iterations themself.
+In this repository, we will outline the use of automatic differentiation (AD) in deal.II for the use in material modelling. Firstly, the already in deal.II avaiable functionality is outlined and then combined with additional features such as the use of automatic differentiation also inside highly nonlinear material models that require local (nested) iterations themself. The code shall be set up such that we can easily switch from AD to analytical tangents using the exact same code. So, when you decide to derive some of the tangens by hand, you can just add them to your existing code and get some speed-up.
 
 ## What's already there
 - Data types: Deal.II offers a variety of automatic differentiation (AD) packages, where herein we right now use "sacado_dfad". A comparison of different AD types can be found [here](Integration and application of symbolic and automatic differentiation frameworks in dealii_Pelteret.pdf).
@@ -72,7 +72,7 @@ We neglect the second term, because by definition the final yield function Phi_(
 
 When we use the analytical tangent from above, we exactly have to do this. So, we would compute the d_Phi_d_gamma derivative again for the newest values and simply incorporate that in above eq. (xxx). For AD we also need this newest local tangent, but the incorporation is a bit more involved. For AD we extract the derivative from the stress, so we need to introduce the newest local derivative into this variable. However, there is no explicit way to introduce that. This can be solved by computing another iteration, which computes a new Lagrange multiplier (being practically the same as the gamma_k solution, so we do no harm) that is based on the newest d_Phi_d_gamma. Now we have the newest local derivative, but the stress variable still knows nothing about this, so we update the history and compute the stress again that now contains the new information. This additional iteration is called "AD_postStep" in the following and is  key aspect #3. 
 
-### The key aspects to extent material models for the use of AD
+## The key aspects to extent material models for the use of AD
 We already outlined #3, so now we summarise the remaining steps:
 * #1 Initialise values AND derivatives: 
 You will  stumble other this in the first local iteration to find the Lagrange multiplier, when you want to extract the local derivative d_Phi_d_gamma. In the following, the important equations of the first iteration (k=0) are summarised for a classical analytical model
@@ -136,8 +136,14 @@ several examples on the usage starting with Neo-Hooke, plasticity, dual-surface,
 - 0: no AD (analytical tangents for residual linearisation and material model)
 - +1: AD on QP level only
 - +2: AD on cell and QP level
-- -1: AD only on cell level
+- -2: AD only on cell level
 
+Why all that? To be able to easily check what kind of differentiation to use on QP and cell level:
+* if (AD_level==0) -> analytical tangents everywhere
+* if (AD_level>0) -> use AD on QP level
+* if (abs(AD_level)==2) -> use AD on cell level
+
+which captures the four cases above quite nicely.
 
 ## Implementation of AD on cell level
 (a teaser on what deal.II gives you with tutorial step 72: https://github.com/dealii/dealii/pull/10393)
