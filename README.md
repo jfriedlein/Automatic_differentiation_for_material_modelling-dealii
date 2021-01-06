@@ -73,7 +73,7 @@ We neglect the second term, because by definition the final yield function Phi_(
 When we use the analytical tangent from above, we exactly have to do this. So, we would compute the d_Phi_d_gamma derivative again for the newest values and simply incorporate that in above eq. (xxx). For AD we also need this newest local tangent, but the incorporation is a bit more involved. For AD we extract the derivative from the stress, so we need to introduce the newest local derivative into this variable. However, there is no explicit way to introduce that. This can be solved by computing another iteration, which computes a new Lagrange multiplier (being practically the same as the gamma_k solution, so we do no harm) that is based on the newest d_Phi_d_gamma. Now we have the newest local derivative, but the stress variable still knows nothing about this, so we update the history and compute the stress again that now contains the new information. This additional iteration is called "AD_postStep" in the following and is  key aspect #3. 
 
 ### The key aspects to extent material models for the use of AD
-We already outline #3, so now we summarise the remaining #1 and #2:
+We already outlined #3, so now we summarise the remaining steps:
 * #1 Initialise values AND derivatives: 
 You will  stumble other this in the first local iteration to find the Lagrange multiplier, when you want to extract the local derivative d_Phi_d_gamma. In the following, the important equations of the first iteration (k=0) are summarised for a classical analytical model
 
@@ -107,7 +107,22 @@ and then take the derivatives wrt gamma_k1. But because we are lazy and want to 
 @todo the code piece on the resetting
 
 * #3 Additional AD post step
+
 As already outlined in the section on the stress-strain tangent above, we run through an additional iteration after we found the converged state to update the derivatives inside the stress.
+
+* #4 Points of non-differentiability
+
+That's an issue you will encounter regularly. In the beginning, your algorithm will fail often due to variables that contain 'nan' or 'inf' in their values and/or derivatives. AD is here like a geologist, it will dig out all the points of non-differentiability and show them to you. Isn't that nice? No, it is super annoying. Enough talking, let's get to the core. You now it from e.g. a hyperbola y=1/x that gets 'inf' when you compute it with x=0. Now, AD also computes its derivative at the given point let's say (x=0) as y'=-1/x², which is also 'inf' for x=0 (To all mathematicians, I apologize for the sloppy use of infinity). In case, you anyway introduce some small deviation e.g. as 1/(x+1e-8) to avoid this or do some extrapolation for small values, this would also resolve the undefined tangent. The nasty thing about AD, however, is that AD will find points of non-differentiability where the 'inf' issue only occurs for the derivative, but not for the equation (e.g. y=...) itself. But because you only implement the equation (y=...) and AD determines the derivative in the background (that you never see as an equation y'), you often don't see the issue beforehand.
+
+Let's play a game. I list some expressions and functions and you yell 'yes', when you found one that exhibits points of non-differentiability. 'x' is our independent variable as a scalar. 'X' is our independent variable as a tensor. 'n' is just an arbitrary scalar. 'y' is the result and we want AD to compute y'=dy/dx:
+* y=sqrt(x)
+* y=X.norm()
+* y=ln(x)
+* y=x^(2/3)
+* y=1/x
+* @todo add many more
+
+So, go over the above list and see whether you find all the "problematic" candidates, describing the ones where we need to do some extra precautions to avoid our geologist (AD) to dig out dirt (Don't get me wrong, AD and geology are beauties, but there is some dirt involved in both of them). And ... have you noticed it? Each of the above expressions is non-differentiable at some point. The above list is a summary of functions you have to look out for and treat accordingly. The 'norm()' might be one of the nasties, I personally stumbled over so often. In essence, it also contains a square root, whose derivative is '0.5*x^(-0.5)', also part of the '1/x' family, but admittingly well hidden. We will show some ways to work around these problems in the code (in a nutshell: either catch it by 'if ...', add a perturbation like '+1e-8' or extrapolate the expression close to the critical value).
 
 
 ## Implementation of AD on QP-level
