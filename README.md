@@ -126,10 +126,11 @@ So, go over the above list and see whether you find all the "problematic" candid
 
 
 ## Implementation of AD on QP-level
-Now we talk enough about the theory, lets dive into the code and see.
+Now we talked enough about the theory, lets dive into the code and see.
 
 several examples on the usage starting with Neo-Hooke, plasticity, dual-surface, ...
 
+A quick and dirty version of AD on the QP-level can be found in the file "Multiplicative plasticity with automatic differentiation - quickDirty.cc". Therein we use AD only for the stress-strain tangent. The functionality is split up into two functions. A helper function that organises the AD stuff and the actual algorithm for the material model, which is templated by Number. This enables us to call the material model either with AD or, in case we implemented the tangent, we can use the same routine together with analytical tangent.
 
 ## "Levels" of AD
 (That is my personal convention, if you don't like it, I'm sorry. We only accept better ideas in the "Issues" section, not complaints.)
